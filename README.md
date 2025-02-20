@@ -6,6 +6,9 @@
 This is a skeleton you can use to start your projects.
 
 **Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
+## Stories:
+
+this is where we can write
 
 ## Overview
 
