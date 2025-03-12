@@ -16,8 +16,8 @@ class InventoryFactory(factory.Factory):
 
     id = factory.Sequence(lambda n: n)
     name = factory.Faker("name")
-    quantity = factory.Faker("random_int", min=0, max=100)
-    condition = factory.Faker("condition")
-    restock_level = factory.Faker("random_int", min=0, max=100)
+    quantity = factory.fuzzy.FuzzyInteger(0, 100)
+    condition = factory.fuzzy.FuzzyChoice(choices=("new", "used", "open_box"))
+    restock_level = factory.fuzzy.FuzzyInteger(0, 100)
 
     # Todo: Add your other attributes here...
