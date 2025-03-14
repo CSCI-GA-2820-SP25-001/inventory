@@ -27,9 +27,9 @@ class Inventory(db.Model):
     ##################################################
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(63))
-    quantity = db.Column(db.String(50))
+    quantity = db.Column(db.Integer)
     condition = db.Column(db.String(24))
-    restock_level = db.Column(db.String(24))
+    restock_level = db.Column(db.Integer)
 
     # Todo: Place the rest of your schema here...
 
@@ -78,9 +78,9 @@ class Inventory(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "quantity": self.quantity,
+            "quantity": int(self.quantity),
             "condition": self.condition,
-            "restock_level": self.restock_level,
+            "restock_level": int(self.restock_level),
         }
 
     def deserialize(self, data):

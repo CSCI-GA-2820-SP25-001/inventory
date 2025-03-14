@@ -15,7 +15,7 @@
 ######################################################################
 
 """
-Test cases for Pet Model
+Test cases for Inventory Model
 """
 
 # pylint: disable=duplicate-code
@@ -77,3 +77,31 @@ class TestInventory(TestCase):
         self.assertEqual(data.quantity, inventory.quantity)
         self.assertEqual(data.condition, inventory.condition)
         self.assertEqual(data.restock_level, inventory.restock_level)
+
+    def test_update_a_inventory(self):
+        """It should Update a Inventory"""
+        inventory = InventoryFactory()
+        logging.debug(inventory)
+        inventory.id = None
+        inventory.create()
+        logging.debug(inventory)
+        self.assertIsNotNone(inventory.id)
+        # Change it an save it
+        inventory.category = "k9"
+        original_id = inventory.id
+        inventory.update()
+        self.assertEqual(inventory.id, original_id)
+        self.assertEqual(inventory.category, "k9")
+        # Fetch it back and make sure the id hasn't changed
+        # but the data did change
+        inventorys = Inventory.all()
+        self.assertEqual(len(inventorys), 1)
+        self.assertEqual(inventorys[0].id, original_id)
+        self.assertEqual(inventorys[0].category, "k9")
+
+    def test_update_no_id(self):
+        """It should not Update a Inventory with no id"""
+        inventory = InventoryFactory()
+        logging.debug(inventory)
+        inventory.id = None
+        self.assertRaises(DataValidationError, inventory.update)

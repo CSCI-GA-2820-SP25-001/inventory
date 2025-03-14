@@ -43,4 +43,90 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-# Todo: Place your REST API code here ...
+
+######################################################################
+# CREATE A NEW INVENTORY
+######################################################################
+@app.route("/inventorys", methods=["POST"])
+def create_inventorys():
+    """
+    Create Inventory
+    This endpoint will create Inventory based the data in the body that is posted
+    """
+    app.logger.info("Request to Create Inventory...")
+    check_content_type("application/json")
+
+    inventory = Inventory()
+    # Get the data from the request and deserialize it
+    data = request.get_json()
+    app.logger.info("Processing: %s", data)
+    inventory.deserialize(data)
+
+    # Save the new Inventory to the database
+    inventory.create()
+    app.logger.info("Inventory with new id [%s] saved!", inventory.id)
+
+    # Return the location of the new Inventory
+    # To Do: Uncomment this code when "get_inventorys" is implemented
+    # location_url = url_for("get_inventorys", inventory_id=inventory.id, _external=True)
+    location_url = "unknown"
+    return (
+        jsonify(inventory.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
+
+
+######################################################################
+# Checks the ContentType of a request
+######################################################################
+def check_content_type(content_type) -> None:
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        f"Content-Type must be {content_type}",
+    )
+
+
+######################################################################
+# UPDATE AN EXISTING INVENTORY
+######################################################################
+@app.route("/inventory/<int:inventory_id>", methods=["PUT"])
+def update_inventory(inventory_id):
+    """
+    Update a Inventory
+
+    This endpoint will update a Inventory based the body that is posted
+    """
+    app.logger.info("Request to Update a inventory with id [%s]", inventory_id)
+    check_content_type("application/json")
+
+    # Attempt to find the Inventory and abort if not found
+    inventory = Inventory.find(inventory_id)
+    if not inventory:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Inventory with id '{inventory_id}' was not found.",
+        )
+
+    # Update the Inventory with the new data
+    data = request.get_json()
+    app.logger.info("Processing: %s", data)
+    inventory.deserialize(data)
+
+    # Save the updates to the database
+    inventory.update()
+
+    app.logger.info("Inventory with ID: %d updated.", inventory.id)
+    return jsonify(inventory.serialize()), status.HTTP_200_OK
