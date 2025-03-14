@@ -47,8 +47,8 @@ def index():
 ######################################################################
 # CREATE A NEW INVENTORY
 ######################################################################
-@app.route("/inventorys", methods=["POST"])
-def create_inventorys():
+@app.route("/inventory", methods=["POST"])
+def create_inventory():
     """
     Create Inventory
     This endpoint will create Inventory based the data in the body that is posted
@@ -67,8 +67,8 @@ def create_inventorys():
     app.logger.info("Inventory with new id [%s] saved!", inventory.id)
 
     # Return the location of the new Inventory
-    # To Do: Uncomment this code when "get_inventorys" is implemented
-    # location_url = url_for("get_inventorys", inventory_id=inventory.id, _external=True)
+    # To Do: Uncomment this code when "get_inventory" is implemented
+    # location_url = url_for("get_inventory", inventory_id=inventory.id, _external=True)
     location_url = "unknown"
     return (
         jsonify(inventory.serialize()),

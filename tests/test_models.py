@@ -94,10 +94,10 @@ class TestInventory(TestCase):
         self.assertEqual(inventory.category, "k9")
         # Fetch it back and make sure the id hasn't changed
         # but the data did change
-        inventorys = Inventory.all()
-        self.assertEqual(len(inventorys), 1)
-        self.assertEqual(inventorys[0].id, original_id)
-        self.assertEqual(inventorys[0].category, "k9")
+        inventory = Inventory.all()
+        self.assertEqual(len(inventory), 1)
+        self.assertEqual(inventory[0].id, original_id)
+        self.assertEqual(inventory[0].category, "k9")
 
     def test_update_no_id(self):
         """It should not Update a Inventory with no id"""

@@ -31,7 +31,7 @@ from .factories import InventoryFactory
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
-BASE_URL = "/inventorys"
+BASE_URL = "/inventory"
 
 
 ######################################################################
@@ -104,7 +104,7 @@ class TestYourResourceService(TestCase):
         self.assertEqual(new_inventory["condition"], test_inventory.condition)
         self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)
 
-        # To Do: Uncomment this code when "get_inventorys" is implemented
+        # To Do: Uncomment this code when "get_inventory" is implemented
         # Check that the location header was correct
         # response = self.client.get(location)
         # self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -114,10 +114,6 @@ class TestYourResourceService(TestCase):
         # self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
         # self.assertEqual(new_inventory["condition"], test_inventory.condition)
         # self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)
-
-
-if __name__ == "__main__":
-    unittest.main()
 
     # update inventory test (Samir)
 
@@ -131,10 +127,21 @@ if __name__ == "__main__":
         # update the inventory
         new_inventory = response.get_json()
         logging.debug(new_inventory)
-        new_inventory["category"] = "unknown"
+        new_inventory["name"] = "unknown"
+        new_inventory["quantity"] = 10
+        new_inventory["condition"] = "unknown"
+        new_inventory["restock_level"] = 10
         response = self.client.put(
             f"{BASE_URL}/{new_inventory['id']}", json=new_inventory
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         updated_inventory = response.get_json()
-        self.assertEqual(updated_inventory["category"], "unknown")
+        self.assertEqual(updated_inventory["name"], "unknown")
+
+    # Read Inventory Test (Sina)
+
+    # Delete Inventory Test (Teresa)
+
+
+if __name__ == "__main__":
+    unittest.main()
