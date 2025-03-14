@@ -21,14 +21,17 @@ TestInventory API Service Test Suite
 # pylint: disable=duplicate-code
 import os
 import logging
+import unittest
 from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Inventory
+from .factories import InventoryFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
+BASE_URL = "/inventorys"
 
 
 ######################################################################
@@ -56,6 +59,7 @@ class TestYourResourceService(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
+        self.client.testing = True
         db.session.query(Inventory).delete()  # clean up the last tests
         db.session.commit()
 
@@ -72,4 +76,44 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
+    def test_create_inventory(self):
+        """It should Create a new Inventory"""
+        test_inventory = InventoryFactory()
+        logging.debug("Test Inventory: %s", test_inventory.serialize())
+        # response = self.client.post(
+        #     BASE_URL, json=test_inventory.serialize(), content_type="application/json"
+        # )
+        response = self.client.post(BASE_URL, json=test_inventory.serialize())
+        logging.debug("Response status code: %s", response.status_code)
+        logging.debug("Response data: %s", response.get_json())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = response.headers.get("Location", None)
+        logging.debug("Location header: %s", location)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_inventory = response.get_json()
+        logging.debug("New Inventory: %s", new_inventory)
+        self.assertIsNotNone(new_inventory["id"])
+        self.assertEqual(new_inventory["name"], test_inventory.name)
+        self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
+        # self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
+        self.assertEqual(new_inventory["condition"], test_inventory.condition)
+        self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)
+
+        # To Do: Uncomment this code when "get_inventorys" is implemented
+        # Check that the location header was correct
+        # response = self.client.get(location)
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # new_inventory = response.get_json()
+        # self.assertEqual(new_inventory["id"], test_inventory.id)
+        # self.assertEqual(new_inventory["name"], test_inventory.name)
+        # self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
+        # self.assertEqual(new_inventory["condition"], test_inventory.condition)
+        # self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)
+
+
+if __name__ == "__main__":
+    unittest.main()
