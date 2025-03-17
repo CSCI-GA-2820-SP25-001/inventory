@@ -68,8 +68,8 @@ def create_inventory():
 
     # Return the location of the new Inventory
     # To Do: Uncomment this code when "get_inventory" is implemented
-    # location_url = url_for("get_inventory", inventory_id=inventory.id, _external=True)
-    location_url = "unknown"
+    location_url = url_for("get_inventory", inventory_id=inventory.id, _external=True)
+    # location_url = "unknown"
     return (
         jsonify(inventory.serialize()),
         status.HTTP_201_CREATED,
@@ -129,4 +129,30 @@ def update_inventory(inventory_id):
     inventory.update()
 
     app.logger.info("Inventory with ID: %d updated.", inventory.id)
+    return jsonify(inventory.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# READ AN INVENTORY
+######################################################################
+
+
+@app.route("/inventory/<int:inventory_id>", methods=["GET"])
+def get_inventory(inventory_id):
+    """
+    Retrieve a single Inventory
+
+    This endpoint will return a Inventory based on it's id
+    """
+    app.logger.info("Request to Retrieve a inventory with id [%s]", inventory_id)
+
+    # Attempt to find the Inventory and abort if not found
+    inventory = Inventory.find(inventory_id)
+    if not inventory:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Inventory with id '{inventory_id}' was not found.",
+        )
+
+    app.logger.info("Returning inventory: %s", inventory.name)
     return jsonify(inventory.serialize()), status.HTTP_200_OK
