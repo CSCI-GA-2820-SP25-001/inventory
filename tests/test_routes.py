@@ -67,6 +67,25 @@ class TestYourResourceService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
+    ############################################################
+    # Utility function to bulk create inventory
+    ############################################################
+    def _create_inventory(self, count: int = 1) -> list:
+        """Factory method to create inventory in bulk"""
+        inventory = []
+        for _ in range(count):
+            test_inventory = InventoryFactory()
+            response = self.client.post(BASE_URL, json=test_inventory.serialize())
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_201_CREATED,
+                "Could not create test inventory",
+            )
+            new_inventory = response.get_json()
+            test_inventory.id = new_inventory["id"]
+            inventory.append(test_inventory)
+        return inventory
+
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
@@ -106,14 +125,13 @@ class TestYourResourceService(TestCase):
 
         # To Do: Uncomment this code when "get_inventory" is implemented
         # Check that the location header was correct
-        # response = self.client.get(location)
-        # self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # new_inventory = response.get_json()
-        # self.assertEqual(new_inventory["id"], test_inventory.id)
-        # self.assertEqual(new_inventory["name"], test_inventory.name)
-        # self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
-        # self.assertEqual(new_inventory["condition"], test_inventory.condition)
-        # self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)
+        response = self.client.get(location)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_inventory = response.get_json()
+        self.assertEqual(new_inventory["name"], test_inventory.name)
+        self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
+        self.assertEqual(new_inventory["condition"], test_inventory.condition)
+        self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)
 
     # update inventory test (Samir)
 
@@ -139,6 +157,23 @@ class TestYourResourceService(TestCase):
         self.assertEqual(updated_inventory["name"], "unknown")
 
     # Read Inventory Test (Sina)
+
+    def test_get_inventory(self):
+        """It should Get a single Inventory"""
+        # get the id of a inventory
+        test_inventory = self._create_inventory(1)[0]
+        response = self.client.get(f"{BASE_URL}/{test_inventory.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["name"], test_inventory.name)
+
+    def test_get_inventory_not_found(self):
+        """It should not Get a Inventory thats not found"""
+        response = self.client.get(f"{BASE_URL}/0")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        logging.debug("Response data = %s", data)
+        self.assertIn("was not found", data["message"])
 
     # Delete Inventory Test (Teresa)
 
