@@ -205,6 +205,18 @@ class TestYourResourceService(TestCase):
         data = response.get_json()
         self.assertEqual(len(data), 5)
 
+    # Tests
+
+    def test_no_content_type(self):
+        response = self.client.post(BASE_URL, headers={"Some-Header": "value"})
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_wrong_content_type(self):
+        response = self.client.post(
+            BASE_URL, data="wrong data", content_type="application/xml"
+        )
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
 
 if __name__ == "__main__":
     unittest.main()

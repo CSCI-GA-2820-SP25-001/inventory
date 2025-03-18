@@ -198,7 +198,6 @@ def list_inventory():
     # Parse any arguments from the query string
     category = request.args.get("category")
     name = request.args.get("name")
-    available = request.args.get("available")
 
     if category:
         app.logger.info("Find by category: %s", category)
@@ -206,11 +205,6 @@ def list_inventory():
     elif name:
         app.logger.info("Find by name: %s", name)
         inventory = Inventory.find_by_name(name)
-    elif available:
-        app.logger.info("Find by available: %s", available)
-        # create bool from string
-        available_value = available.lower() in ["true", "yes", "1"]
-        inventory = Inventory.find_by_availability(available_value)
     else:
         app.logger.info("Find all")
         inventory = Inventory.all()
