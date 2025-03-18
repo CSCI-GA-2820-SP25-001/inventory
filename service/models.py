@@ -27,9 +27,9 @@ class Inventory(db.Model):
     ##################################################
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(63))
-    quantity = db.Column(db.String(50))
+    quantity = db.Column(db.Integer)
     condition = db.Column(db.String(24))
-    restock_level = db.Column(db.String(24))
+    restock_level = db.Column(db.Integer)
 
     # Todo: Place the rest of your schema here...
 
@@ -55,6 +55,8 @@ class Inventory(db.Model):
         Updates a Inventory to the database
         """
         logger.info("Saving %s", self.name)
+        if not self.id:
+            raise DataValidationError("Update called with empty ID field")
         try:
             db.session.commit()
         except Exception as e:
@@ -78,9 +80,9 @@ class Inventory(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "quantity": self.quantity,
+            "quantity": int(self.quantity),
             "condition": self.condition,
-            "restock_level": self.restock_level,
+            "restock_level": int(self.restock_level),
         }
 
     def deserialize(self, data):
@@ -114,8 +116,8 @@ class Inventory(db.Model):
 
     @classmethod
     def all(cls):
-        """Returns all of the Inventorys in the database"""
-        logger.info("Processing all Inventorys")
+        """Returns all of the Inventory in the database"""
+        logger.info("Processing all Inventory")
         return cls.query.all()
 
     @classmethod
@@ -126,10 +128,10 @@ class Inventory(db.Model):
 
     @classmethod
     def find_by_name(cls, name):
-        """Returns all Inventorys with the given name
+        """Returns all Inventory with the given name
 
         Args:
-            name (string): the name of the Inventorys you want to match
+            name (string): the name of the Inventory you want to match
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.name == name)
