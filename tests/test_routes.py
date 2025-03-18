@@ -91,14 +91,11 @@ class TestYourResourceService(TestCase):
     ######################################################################
 
     def test_index(self):
-
-        r"""It should call the Home Page"""
+        """It should call the Home Page"""
         response = self.client.get("/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
-        self.assertEqual(data["name"], "Inventory REST API Service")
-
-
+        self.assertEqual(data["name"], "Welcome to the Inventory REST API Service")
 
     # create inventory test (Narissa)
     def test_create_inventory(self):
@@ -197,7 +194,17 @@ class TestYourResourceService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(len(response.data), 0)
 
+    # ----------------------------------------------------------
+    # TEST LIST(Teresa)
+    # ----------------------------------------------------------
+    def test_get_inventory_list(self):
+        """It should Get a list of Inventory"""
+        self._create_inventory(5)
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 5)
+
 
 if __name__ == "__main__":
     unittest.main()
-

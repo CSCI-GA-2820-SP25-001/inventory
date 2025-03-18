@@ -35,7 +35,6 @@ def index():
     """Root URL response"""
     app.logger.info("Request for Root URL")
     return (
-        "Reminder: return some useful information in json format about the service here",
         jsonify(
             name="Welcome to the Inventory REST API Service",
             version="1.0",
@@ -184,3 +183,38 @@ def delete_inventory(inventory_id):
 
     app.logger.info("Inventory with ID: %d delete complete.", inventory_id)
     return {}, status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# LIST ALL INVENTORY
+######################################################################
+@app.route("/inventory", methods=["GET"])
+def list_inventory():
+    """Returns all of the Inventory"""
+    app.logger.info("Request for inventory list")
+
+    inventory = []
+
+    # Parse any arguments from the query string
+    category = request.args.get("category")
+    name = request.args.get("name")
+    available = request.args.get("available")
+
+    if category:
+        app.logger.info("Find by category: %s", category)
+        inventory = Inventory.find_by_category(category)
+    elif name:
+        app.logger.info("Find by name: %s", name)
+        inventory = Inventory.find_by_name(name)
+    elif available:
+        app.logger.info("Find by available: %s", available)
+        # create bool from string
+        available_value = available.lower() in ["true", "yes", "1"]
+        inventory = Inventory.find_by_availability(available_value)
+    else:
+        app.logger.info("Find all")
+        inventory = Inventory.all()
+
+    results = [inventory.serialize() for inventory in inventory]
+    app.logger.info("Returning %d inventory", len(results))
+    return jsonify(results), status.HTTP_200_OK
