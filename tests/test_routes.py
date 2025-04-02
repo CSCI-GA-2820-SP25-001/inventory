@@ -236,6 +236,40 @@ class TestYourResourceService(TestCase):
         for item in data:
             self.assertEqual(item["condition"], "new")
 
+    def test_mark_inventory_as_damaged(self):
+        """It should mark an Inventory item as damaged"""
+        # First create an item
+        test_inventory = InventoryFactory(condition="new")
+        response = self.client.post(BASE_URL, json=test_inventory.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        inventory = response.get_json()
+        inventory_id = inventory["id"]
+
+        # Mark as damaged
+        response = self.client.put(f"{BASE_URL}/{inventory_id}/mark_damaged")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        updated = response.get_json()
+        self.assertEqual(updated["condition"], "damaged")
+
+    def test_mark_damaged_not_found(self):
+        """It should return 404 when marking non-existent item as damaged"""
+        response = self.client.put(f"{BASE_URL}/9999/mark_damaged")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_bad_post_request(self):
+        """It should return 400 on bad POST data"""
+        response = self.client.post(
+            BASE_URL, data="not-json", content_type="application/json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_method_not_allowed(self):
+        """It should return 405 Method Not Allowed"""
+        response = self.client.put("/")
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 if __name__ == "__main__":
     unittest.main()

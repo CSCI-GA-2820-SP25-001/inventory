@@ -208,3 +208,26 @@ def list_inventory():
     results = [item.serialize() for item in inventory]
     app.logger.info("Returning %d inventory", len(results))
     return jsonify(results), status.HTTP_200_OK
+
+
+######################################################################
+# ACTION: MARK INVENTORY AS DAMAGED
+######################################################################
+@app.route("/inventory/<int:inventory_id>/mark_damaged", methods=["PUT"])
+def mark_damaged(inventory_id):
+    """
+    Marks an Inventory as damaged
+    """
+    app.logger.info("Request to mark inventory as damaged [%s]", inventory_id)
+
+    inventory = Inventory.find(inventory_id)
+    if not inventory:
+        abort(
+            status.HTTP_404_NOT_FOUND, f"Inventory with id '{inventory_id}' not found"
+        )
+
+    inventory.condition = "damaged"
+    inventory.update()
+
+    app.logger.info("Inventory with ID: %d marked as damaged.", inventory.id)
+    return jsonify(inventory.serialize()), status.HTTP_200_OK

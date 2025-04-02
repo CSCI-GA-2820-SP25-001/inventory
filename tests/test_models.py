@@ -105,3 +105,44 @@ class TestInventory(TestCase):
         logging.debug(inventory)
         inventory.id = None
         self.assertRaises(DataValidationError, inventory.update)
+
+    def test_serialize_inventory(self):
+        """It should serialize an Inventory"""
+        inventory = InventoryFactory()
+        data = inventory.serialize()
+        self.assertIsInstance(data, dict)
+        self.assertIn("id", data)
+        self.assertEqual(data["name"], inventory.name)
+
+    def test_deserialize_inventory(self):
+        """It should deserialize an Inventory"""
+        inventory = Inventory()
+        data = InventoryFactory().serialize()
+        inventory.deserialize(data)
+        self.assertEqual(inventory.name, data["name"])
+        self.assertEqual(inventory.quantity, data["quantity"])
+
+    def test_deserialize_missing_data(self):
+        """It should raise error for missing data"""
+        inventory = Inventory()
+        data = {"name": "Item"}  # missing fields
+        with self.assertRaises(DataValidationError):
+            inventory.deserialize(data)
+
+    def test_deserialize_bad_data(self):
+        """It should raise error for bad data"""
+        inventory = Inventory()
+        with self.assertRaises(DataValidationError):
+            inventory.deserialize("bad data")
+
+    def test_update_inventory_without_id(self):
+        """It should raise error when updating without id"""
+        inventory = InventoryFactory()
+        inventory.id = None
+        with self.assertRaises(DataValidationError):
+            inventory.update()
+
+    def test_repr_string(self):
+        """It should return a string representation"""
+        inventory = InventoryFactory()
+        self.assertTrue(str(inventory).startswith("<Inventory"))
