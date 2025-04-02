@@ -217,6 +217,25 @@ class TestYourResourceService(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
+    # Narissa Test Inventory by Condition
+    def test_query_inventory_by_condition(self):
+        """It should return inventory filtered by condition (e.g., 'new')"""
+
+        # Create some with different conditions
+        conditions = ["used", "open_box", "new", "used"]
+        for cond in conditions:
+            inv = InventoryFactory(condition=cond)
+            self.client.post(BASE_URL, json=inv.serialize())
+
+        # Now filter by 'new'
+        response = self.client.get(f"{BASE_URL}?condition=new")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+
+        self.assertGreaterEqual(len(data), 1)
+        for item in data:
+            self.assertEqual(item["condition"], "new")
+
 
 if __name__ == "__main__":
     unittest.main()

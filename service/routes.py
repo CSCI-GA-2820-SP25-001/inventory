@@ -190,25 +190,21 @@ def delete_inventory(inventory_id):
 ######################################################################
 @app.route("/inventory", methods=["GET"])
 def list_inventory():
-    """Returns all of the Inventory"""
-    app.logger.info("Request for inventory list")
-
-    inventory = []
-
-    # Parse any arguments from the query string
+    ...
+    condition = request.args.get("condition")
     category = request.args.get("category")
     name = request.args.get("name")
 
-    if category:
-        app.logger.info("Find by category: %s", category)
+    if condition:
+        app.logger.info("Find by condition: %s", condition)
+        inventory = Inventory.find_by_condition(condition)
+    elif category:
         inventory = Inventory.find_by_category(category)
     elif name:
-        app.logger.info("Find by name: %s", name)
         inventory = Inventory.find_by_name(name)
     else:
-        app.logger.info("Find all")
         inventory = Inventory.all()
 
-    results = [inventory.serialize() for inventory in inventory]
+    results = [item.serialize() for item in inventory]
     app.logger.info("Returning %d inventory", len(results))
     return jsonify(results), status.HTTP_200_OK
