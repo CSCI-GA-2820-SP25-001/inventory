@@ -135,3 +135,9 @@ class Inventory(db.Model):
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.name == name)
+
+    @classmethod
+    def find_by_condition(cls, condition):
+        """Returns all Inventory with the given condition"""
+        logger.info("Processing condition query for %s ...", condition)
+        return cls.query.filter(cls.condition == condition)
