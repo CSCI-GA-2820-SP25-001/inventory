@@ -6,6 +6,9 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-red.svg)](https://www.python.org/)
 [![Open in Remote - Containers](https://img.shields.io/static/v1?label=Remote%20-%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/nyu-devops/inventory)
+![CI](https://github.com/CSCI-GA-2820-SP25-001/inventory/actions/workflows/ci.yaml/badge.svg)
+[![codecov](https://codecov.io/gh/CSCI-GA-2820-SP25-001/inventory/branch/master/graph/badge.svg)](https://codecov.io/gh/CSCI-GA-2820-SP25-001/inventory)
+
 
 ## Introduction
 
