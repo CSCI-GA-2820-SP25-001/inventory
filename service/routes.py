@@ -23,7 +23,7 @@ and Delete Inventory
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Inventory
+from service.models import Inventory, Alert, db
 from service.common import status  # HTTP Status Codes
 
 
@@ -231,3 +231,35 @@ def mark_damaged(inventory_id):
 
     app.logger.info("Inventory with ID: %d marked as damaged.", inventory.id)
     return jsonify(inventory.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# Trigger restock
+######################################################################
+
+
+@app.route("/inventory/<int:inventory_id>/restock_check", methods=["PUT"])
+def update_stock(inventory_id):
+    inventory = Inventory.find(inventory_id)
+    if not inventory:
+        return jsonify({"error": "Inventory not found"}), 404
+
+    data = request.get_json()
+    if "quantity" not in data:
+        return jsonify({"error": "Missing quantity"}), 400
+
+    new_quantity = data["quantity"]
+    inventory.quantity = new_quantity
+
+    # Check for low stock
+    if new_quantity < inventory.restock_level:
+        message = (
+            f"Low Stock Alert: Item '{inventory.name}' has quantity {new_quantity}, "
+            f"below restock level {inventory.restock_level}"
+        )
+        alert = Alert(product_id=inventory.id, message=message)
+        db.session.add(alert)
+
+    inventory.update()
+    db.session.commit()
+    return jsonify(inventory.serialize()), 200
