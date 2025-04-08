@@ -263,3 +263,39 @@ def update_stock(inventory_id):
     inventory.update()
     db.session.commit()
     return jsonify(inventory.serialize()), 200
+
+
+# Endpoint for reading stock
+# I acknowledge it that the code would be much cleaner if the above function would refer to the below function.
+@app.route("/inventory/stock", methods=["GET"])
+def get_stock_levels():
+    """
+    Retrieve stock levels for all inventory items
+    """
+    app.logger.info("Request to retrieve inventory stock levels")
+    inventory_items = Inventory.all()
+    stock_levels = [
+        {"product_id": item.id, "quantity": item.quantity} for item in inventory_items
+    ]
+    return jsonify(stock_levels), status.HTTP_200_OK
+
+
+# Endpoint for Low Stock Alert
+@app.route("/inventory/low-stock", methods=["GET"])
+def get_low_stock_alerts():
+    """
+    Retrieve low-stock alerts for inventory items
+    """
+    app.logger.info("Request to retrieve low-stock alerts")
+    inventory_items = Inventory.all()
+    low_stock_items = [
+        {
+            "product_id": item.id,
+            "quantity": item.quantity,
+            "restock_level": item.restock_level,
+            "alert_status": "Alert! Product is Low Stock",
+        }
+        for item in inventory_items
+        if item.quantity < item.restock_level
+    ]
+    return jsonify(low_stock_items), status.HTTP_200_OK
