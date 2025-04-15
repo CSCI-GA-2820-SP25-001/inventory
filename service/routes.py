@@ -231,3 +231,11 @@ def mark_damaged(inventory_id):
 
     app.logger.info("Inventory with ID: %d marked as damaged.", inventory.id)
     return jsonify(inventory.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# HEALTH
+######################################################################
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify(status="OK"), 200

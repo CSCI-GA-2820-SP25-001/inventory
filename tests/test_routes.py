@@ -27,11 +27,25 @@ from wsgi import app
 from service.common import status
 from service.models import db, Inventory
 from .factories import InventoryFactory
+import pytest
+
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
 BASE_URL = "/inventory"
+
+
+######################################################################
+#  GETTING PYTEST SETUP
+######################################################################
+
+
+@pytest.fixture
+def client():
+    app.config["TESTING"] = True
+    with app.test_client() as client:
+        yield client
 
 
 ######################################################################
@@ -273,3 +287,13 @@ class TestYourResourceService(TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+############################################################
+# TEST HEALTH
+############################################################
+def test_health_endpoint(client):
+    """Test the /health endpoint"""
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json == {"status": "OK"}
