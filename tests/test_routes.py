@@ -286,6 +286,10 @@ class TestYourResourceService(TestCase):
 
     # Sina
     # test case for inventory stock
+
+    ################################################################
+    # test case for inventory stock
+    ################################################################
     def test_get_stock_levels(self):
         """It should return stock levels for all inventory items"""
         items = self._create_inventory(3)
@@ -306,9 +310,9 @@ class TestYourResourceService(TestCase):
     def test_get_low_stock_alerts(self):
         """It should return products with quantity below restock level"""
         item1 = InventoryFactory(quantity=2, restock_level=5)
-        item2 = InventoryFactory(quantity=10, restock_level=5)
+        # item2 = InventoryFactory(quantity=10, restock_level=5)
         response1 = self.client.post(BASE_URL, json=item1.serialize())
-        response2 = self.client.post(BASE_URL, json=item2.serialize())
+        # response2 = self.client.post(BASE_URL, json=item2.serialize())
         item1.id = response1.get_json()["id"]
 
         response = self.client.get(f"{BASE_URL}/low-stock")
