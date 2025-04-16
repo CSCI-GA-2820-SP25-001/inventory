@@ -23,7 +23,7 @@ and Delete Inventory
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Inventory
+from service.models import Inventory, Alert, db
 from service.common import status  # HTTP Status Codes
 
 
@@ -234,8 +234,76 @@ def mark_damaged(inventory_id):
 
 
 ######################################################################
+# health-endpoint
 # HEALTH
 ######################################################################
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify(status="OK"), 200
+
+# Trigger restock
+######################################################################
+
+
+@app.route("/inventory/<int:inventory_id>/restock_check", methods=["PUT"])
+def update_stock(inventory_id):
+    inventory = Inventory.find(inventory_id)
+    if not inventory:
+        return jsonify({"error": "Inventory not found"}), 404
+
+    data = request.get_json()
+    if "quantity" not in data:
+        return jsonify({"error": "Missing quantity"}), 400
+
+    new_quantity = data["quantity"]
+    inventory.quantity = new_quantity
+
+    # Check for low stock
+    if new_quantity < inventory.restock_level:
+        message = (
+            f"Low Stock Alert: Item '{inventory.name}' has quantity {new_quantity}, "
+            f"below restock level {inventory.restock_level}"
+        )
+        alert = Alert(product_id=inventory.id, message=message)
+        db.session.add(alert)
+
+    inventory.update()
+    db.session.commit()
+    return jsonify(inventory.serialize()), 200
+
+
+# Endpoint for reading stock
+# I acknowledge it that the code would be much cleaner if the above function would refer to the below function.
+@app.route("/inventory/stock", methods=["GET"])
+def get_stock_levels():
+    """
+    Retrieve stock levels for all inventory items
+    """
+    app.logger.info("Request to retrieve inventory stock levels")
+    inventory_items = Inventory.all()
+    stock_levels = [
+        {"product_id": item.id, "quantity": item.quantity} for item in inventory_items
+    ]
+    return jsonify(stock_levels), status.HTTP_200_OK
+
+
+# Endpoint for Low Stock Alert
+@app.route("/inventory/low-stock", methods=["GET"])
+def get_low_stock_alerts():
+    """
+    Retrieve low-stock alerts for inventory items
+    """
+    app.logger.info("Request to retrieve low-stock alerts")
+    inventory_items = Inventory.all()
+    low_stock_items = [
+        {
+            "product_id": item.id,
+            "quantity": item.quantity,
+            "restock_level": item.restock_level,
+            "alert_status": "Alert! Product is Low Stock",
+        }
+        for item in inventory_items
+        if item.quantity < item.restock_level
+    ]
+    return jsonify(low_stock_items), status.HTTP_200_OK
+

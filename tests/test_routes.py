@@ -284,6 +284,52 @@ class TestYourResourceService(TestCase):
         response = self.client.put("/")
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    # Sina
+    # test case for inventory stock
+    def test_get_stock_levels(self):
+        """It should return stock levels for all inventory items"""
+        items = self._create_inventory(3)
+        response = self.client.get(f"{BASE_URL}/stock")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 3)
+        for item in data:
+            self.assertIn("product_id", item)
+            self.assertIn("quantity", item)
+
+    def test_get_stock_levels_empty(self):
+        """It should return an empty list when no inventory exists"""
+        response = self.client.get(f"{BASE_URL}/stock")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.get_json(), [])
+
+    def test_get_low_stock_alerts(self):
+        """It should return products with quantity below restock level"""
+        item1 = InventoryFactory(quantity=2, restock_level=5)
+        item2 = InventoryFactory(quantity=10, restock_level=5)
+        response1 = self.client.post(BASE_URL, json=item1.serialize())
+        response2 = self.client.post(BASE_URL, json=item2.serialize())
+        item1.id = response1.get_json()["id"]
+
+        response = self.client.get(f"{BASE_URL}/low-stock")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["product_id"], item1.id)
+        self.assertEqual(data[0]["alert_status"], "Alert! Product is Low Stock")
+
+    # test case for inventory low stock
+    def test_get_low_stock_alerts_empty(self):
+        """It should return empty list when all stock levels are healthy"""
+        item1 = InventoryFactory(quantity=10, restock_level=5)
+        item2 = InventoryFactory(quantity=20, restock_level=10)
+        self.client.post(BASE_URL, json=item1.serialize())
+        self.client.post(BASE_URL, json=item2.serialize())
+
+        response = self.client.get(f"{BASE_URL}/low-stock")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.get_json(), [])
+
 
 if __name__ == "__main__":
     unittest.main()

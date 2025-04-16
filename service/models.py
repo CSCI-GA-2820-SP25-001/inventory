@@ -6,11 +6,19 @@ All of the models are stored in this module
 
 import logging
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 logger = logging.getLogger("flask.app")
 
 # Create the SQLAlchemy object to be initialized later in init_db()
 db = SQLAlchemy()
+
+
+class Alert(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)
+    message = db.Column(db.String(256), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
 class DataValidationError(Exception):
@@ -29,7 +37,7 @@ class Inventory(db.Model):
     name = db.Column(db.String(63))
     quantity = db.Column(db.Integer)
     condition = db.Column(db.String(24))
-    restock_level = db.Column(db.Integer)
+    restock_level = db.Column(db.Integer, nullable=False, default=0)
 
     # Todo: Place the rest of your schema here...
 
