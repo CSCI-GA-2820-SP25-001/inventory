@@ -234,6 +234,14 @@ def mark_damaged(inventory_id):
 
 
 ######################################################################
+# health-endpoint
+# HEALTH
+######################################################################
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify(status="OK"), 200
+
+
 # Trigger restock
 ######################################################################
 
@@ -296,6 +304,6 @@ def get_low_stock_alerts():
             "alert_status": "Alert! Product is Low Stock",
         }
         for item in inventory_items
-        if item.quantity < item.restock_level
+        if int(item.quantity) < int(item.restock_level)
     ]
     return jsonify(low_stock_items), status.HTTP_200_OK
