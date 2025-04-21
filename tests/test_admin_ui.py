@@ -147,6 +147,70 @@ class TestAdminUI(TestCase):
         self.assertIn("error", error_response)
         self.assertEqual(error_response["error"], "Missing quantity")
 
+    def test_update_product(self):
+        """It should update a product with new values"""
+        # Create a test inventory item
+        test_inventory = InventoryFactory(
+            name="Test Product", quantity=10, condition="new", restock_level=5
+        )
+        test_inventory.create()
+        inventory_id = test_inventory.id
+
+        # Update the product with new values
+        updated_data = {
+            "name": "Test Product",  # Keep the same name
+            "quantity": 15,
+            "condition": "used",
+            "restock_level": 8,
+        }
+        response = self.client.put(
+            f"/inventory/{inventory_id}",
+            json=updated_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check the response data
+        updated_product = response.get_json()
+        self.assertEqual(updated_product["name"], "Test Product")
+        self.assertEqual(updated_product["quantity"], 15)
+        self.assertEqual(updated_product["condition"], "used")
+        self.assertEqual(updated_product["restock_level"], 8)
+
+        # Verify the database was updated
+        updated_inventory = Inventory.find(inventory_id)
+        self.assertEqual(updated_inventory.quantity, 15)
+        self.assertEqual(updated_inventory.condition, "used")
+        self.assertEqual(updated_inventory.restock_level, 8)
+
+    def test_update_product_not_found(self):
+        """It should return 404 when trying to update a non-existent product"""
+        # Attempt to update a product that doesn't exist
+        data = {
+            "name": "Non-existent Product",
+            "quantity": 5,
+            "condition": "new",
+            "restock_level": 3,
+        }
+        response = self.client.put(
+            "/inventory/9999", json=data, content_type="application/json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_product_invalid_content_type(self):
+        """It should return 415 when content type is not application/json"""
+        # Create a test inventory item
+        test_inventory = InventoryFactory()
+        test_inventory.create()
+        inventory_id = test_inventory.id
+
+        # Test with invalid content type
+        data = "This is not JSON"
+        response = self.client.put(
+            f"/inventory/{inventory_id}", data=data, content_type="text/plain"
+        )
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
 
 if __name__ == "__main__":
     unittest.main()

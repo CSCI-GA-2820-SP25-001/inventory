@@ -46,7 +46,8 @@ section {
     gap: 15px;
 }
 
-.add-product-form {
+.add-product-form,
+.update-product-form {
     flex-wrap: wrap;
 }
 
@@ -85,6 +86,19 @@ select {
 
 .btn:hover {
     background-color: #2980b9;
+}
+
+.btn-secondary {
+    background-color: #95a5a6;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 10px;
 }
 
 .product-card {

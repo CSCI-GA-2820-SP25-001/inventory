@@ -23,11 +23,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const newProductRestockLevel = document.getElementById('new-product-restock-level');
     const addProductMessage = document.getElementById('add-product-message');
     
+    // Get DOM elements for update product functionality
+    const editProductBtn = document.getElementById('edit-product-btn');
+    const updateProductSection = document.getElementById('update-product-section');
+    const updateProductQuantity = document.getElementById('update-product-quantity');
+    const updateProductCondition = document.getElementById('update-product-condition');
+    const updateProductRestockLevel = document.getElementById('update-product-restock-level');
+    const updateProductBtn = document.getElementById('update-product-btn');
+    const cancelUpdateBtn = document.getElementById('cancel-update-btn');
+    const updateProductMessage = document.getElementById('update-product-message');
+    
+    // Variable to store the current product ID being edited
+    let currentProductId = null;
+    
     // Add event listener to search button
     searchBtn.addEventListener('click', searchProduct);
     
     // Add event listener to add product button
     addProductBtn.addEventListener('click', addProduct);
+    
+    // Add event listener to edit product button
+    editProductBtn.addEventListener('click', editProduct);
+    
+    // Add event listener to update product button
+    updateProductBtn.addEventListener('click', updateProduct);
+    
+    // Add event listener to cancel update button
+    cancelUpdateBtn.addEventListener('click', cancelUpdate);
     
     // Add event listener for Enter key on input field
     productIdInput.addEventListener('keypress', function(event) {
@@ -84,6 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
         productCondition.textContent = product.condition;
         productRestockLevel.textContent = product.restock_level;
         
+        // Store the current product ID
+        currentProductId = product.id;
+        
         // Check stock status
         if (product.quantity < product.restock_level) {
             stockStatus.textContent = 'Low Stock Alert! Quantity is below restock level.';
@@ -95,6 +120,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show product details
         productDetails.classList.remove('hidden');
+        
+        // Hide update section if it's visible
+        updateProductSection.classList.add('hidden');
     }
     
     // Function to show error message
@@ -183,5 +211,112 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             addProductMessage.classList.add('hidden');
         }, 5000);
+    }
+    
+    // Function to show update product message
+    function showUpdateProductMessage(message, isSuccess) {
+        updateProductMessage.textContent = message;
+        updateProductMessage.classList.remove('hidden', 'success', 'error');
+        updateProductMessage.classList.add(isSuccess ? 'success' : 'error');
+        
+        // Hide message after 5 seconds
+        setTimeout(() => {
+            updateProductMessage.classList.add('hidden');
+        }, 5000);
+    }
+    
+    // Function to handle edit product button click
+    function editProduct() {
+        if (!currentProductId) {
+            showError('No product selected for editing');
+            return;
+        }
+        
+        // Populate update form with current values
+        updateProductQuantity.value = productQuantity.textContent;
+        updateProductCondition.value = productCondition.textContent;
+        updateProductRestockLevel.value = productRestockLevel.textContent;
+        
+        // Show update section
+        updateProductSection.classList.remove('hidden');
+    }
+    
+    // Function to handle cancel update button click
+    function cancelUpdate() {
+        // Hide update section
+        updateProductSection.classList.add('hidden');
+    }
+    
+    // Function to handle update product button click
+    function updateProduct() {
+        if (!currentProductId) {
+            showUpdateProductMessage('No product selected for updating', false);
+            return;
+        }
+        
+        // Get form values
+        const quantity = updateProductQuantity.value.trim();
+        const condition = updateProductCondition.value.trim();
+        const restockLevel = updateProductRestockLevel.value.trim();
+        
+        // Validate inputs
+        if (!quantity || !condition || !restockLevel) {
+            showUpdateProductMessage('Please fill out all fields', false);
+            return;
+        }
+        
+        // Create product data object
+        const productData = {
+            name: productName.textContent, // Keep the existing name
+            quantity: parseInt(quantity),
+            condition: condition,
+            restock_level: parseInt(restockLevel)
+        };
+        
+        console.log('Updating product with data:', productData);
+        
+        // Show loading state
+        updateProductBtn.textContent = 'Updating...';
+        updateProductBtn.disabled = true;
+        
+        // Send PUT request to API
+        fetch(`/inventory/${currentProductId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(productData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update product');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Show success message
+            showUpdateProductMessage(`Product "${data.name}" successfully updated`, true);
+            
+            console.log('Product updated successfully:', data);
+            
+            // Update the displayed product details
+            displayProductDetails(data);
+            
+            // Reset button
+            updateProductBtn.textContent = 'Update Product';
+            updateProductBtn.disabled = false;
+            
+            // Hide update section
+            updateProductSection.classList.add('hidden');
+        })
+        .catch(error => {
+            // Show error message
+            showUpdateProductMessage(error.message, false);
+            console.error('Error updating product:', error);
+            
+            // Reset button
+            updateProductBtn.textContent = 'Update Product';
+            updateProductBtn.disabled = false;
+        });
     }
 });

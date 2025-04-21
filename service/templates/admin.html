@@ -65,9 +65,38 @@
                             <p><strong>Restock Level:</strong> <span id="product-restock-level"></span></p>
                         </div>
                         <div id="stock-status" class="stock-status"></div>
+                        <button id="edit-product-btn" class="btn">Edit Product</button>
                     </div>
                 </div>
                 <div id="error-message" class="error hidden"></div>
+            </section>
+            
+            <section id="update-product-section" class="update-product-section hidden">
+                <h2>Update Product</h2>
+                <div class="update-product-form">
+                    <div class="form-group">
+                        <label for="update-product-quantity">Quantity:</label>
+                        <input type="number" id="update-product-quantity" name="update-product-quantity" min="0" placeholder="Enter quantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="update-product-condition">Condition:</label>
+                        <select id="update-product-condition" name="update-product-condition" required>
+                            <option value="">Select condition</option>
+                            <option value="new">New</option>
+                            <option value="used">Used</option>
+                            <option value="damaged">Damaged</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="update-product-restock-level">Restock Level:</label>
+                        <input type="number" id="update-product-restock-level" name="update-product-restock-level" min="0" placeholder="Enter restock level" required>
+                    </div>
+                    <div class="form-buttons">
+                        <button id="update-product-btn" class="btn">Update Product</button>
+                        <button id="cancel-update-btn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+                <div id="update-product-message" class="message hidden"></div>
             </section>
         </main>
         
