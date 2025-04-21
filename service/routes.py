@@ -239,7 +239,13 @@ def mark_damaged(inventory_id):
 ######################################################################
 @app.route("/health", methods=["GET"])
 def health():
-    return jsonify(status="OK"), 200
+    """
+    Health Check endpoint
+
+    This endpoint returns the health status of the service
+    """
+    app.logger.info("Request for Health Check")
+    return jsonify(status="OK"), status.HTTP_200_OK
 
 
 # Trigger restock
@@ -248,16 +254,27 @@ def health():
 
 @app.route("/inventory/<int:inventory_id>/restock_check", methods=["PUT"])
 def update_stock(inventory_id):
+    """
+    Update inventory stock level and create alert if below restock level
+
+    This endpoint will update the quantity of an inventory item and create
+    an alert if the new quantity is below the restock level
+    """
+    app.logger.info("Request to update stock level for inventory id [%s]", inventory_id)
+
     inventory = Inventory.find(inventory_id)
     if not inventory:
-        return jsonify({"error": "Inventory not found"}), 404
+        app.logger.error("Inventory with id [%s] not found", inventory_id)
+        return jsonify({"error": "Inventory not found"}), status.HTTP_404_NOT_FOUND
 
     data = request.get_json()
     if "quantity" not in data:
-        return jsonify({"error": "Missing quantity"}), 400
+        app.logger.error("Missing quantity in request")
+        return jsonify({"error": "Missing quantity"}), status.HTTP_400_BAD_REQUEST
 
     new_quantity = data["quantity"]
     inventory.quantity = new_quantity
+    app.logger.info("Updating quantity to %s", new_quantity)
 
     # Check for low stock
     if new_quantity < inventory.restock_level:
@@ -265,12 +282,14 @@ def update_stock(inventory_id):
             f"Low Stock Alert: Item '{inventory.name}' has quantity {new_quantity}, "
             f"below restock level {inventory.restock_level}"
         )
+        app.logger.info("Creating low stock alert: %s", message)
         alert = Alert(product_id=inventory.id, message=message)
         db.session.add(alert)
 
     inventory.update()
     db.session.commit()
-    return jsonify(inventory.serialize()), 200
+    app.logger.info("Stock level updated for inventory id [%s]", inventory_id)
+    return jsonify(inventory.serialize()), status.HTTP_200_OK
 
 
 # Endpoint for reading stock
