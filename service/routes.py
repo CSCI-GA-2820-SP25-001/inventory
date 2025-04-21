@@ -21,7 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Inventory
 """
 
-from flask import jsonify, request, url_for, abort
+from flask import jsonify, request, url_for, abort, render_template
 from flask import current_app as app  # Import Flask application
 from service.models import Inventory, Alert, db
 from service.common import status  # HTTP Status Codes
@@ -307,3 +307,18 @@ def get_low_stock_alerts():
         if int(item.quantity) < int(item.restock_level)
     ]
     return jsonify(low_stock_items), status.HTTP_200_OK
+
+
+######################################################################
+# ADMIN UI ROUTES
+######################################################################
+
+
+@app.route("/admin", methods=["GET"])
+def admin_ui():
+    """
+    Admin UI for Inventory Management
+    This endpoint will render the Admin UI page
+    """
+    app.logger.info("Request for Admin UI page")
+    return render_template("admin.html")
