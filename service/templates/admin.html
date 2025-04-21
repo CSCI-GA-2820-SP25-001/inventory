@@ -24,6 +24,35 @@
                 </div>
             </section>
             
+            <section class="add-product-section">
+                <h2>Add New Product</h2>
+                <div class="add-product-form">
+                    <div class="form-group">
+                        <label for="new-product-name">Product Name:</label>
+                        <input type="text" id="new-product-name" name="new-product-name" placeholder="Enter product name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-product-quantity">Quantity:</label>
+                        <input type="number" id="new-product-quantity" name="new-product-quantity" min="0" placeholder="Enter quantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-product-condition">Condition:</label>
+                        <select id="new-product-condition" name="new-product-condition" required>
+                            <option value="">Select condition</option>
+                            <option value="new">New</option>
+                            <option value="used">Used</option>
+                            <option value="damaged">Damaged</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-product-restock-level">Restock Level:</label>
+                        <input type="number" id="new-product-restock-level" name="new-product-restock-level" min="0" placeholder="Enter restock level" required>
+                    </div>
+                    <button id="add-product-btn" class="btn">Add Product</button>
+                </div>
+                <div id="add-product-message" class="message hidden"></div>
+            </section>
+            
             <section class="results-section">
                 <h2>Product Details</h2>
                 <div id="product-details" class="hidden">
