@@ -272,7 +272,7 @@ def update_stock(inventory_id):
         app.logger.error("Missing quantity in request")
         return jsonify({"error": "Missing quantity"}), status.HTTP_400_BAD_REQUEST
 
-    new_quantity = data["quantity"]
+    new_quantity = int(data["quantity"])
     inventory.quantity = new_quantity
     app.logger.info("Updating quantity to %s", new_quantity)
 
