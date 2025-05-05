@@ -102,9 +102,9 @@ class Inventory(db.Model):
         """
         try:
             self.name = data["name"]
-            self.quantity = data["quantity"]
+            self.quantity = int(data["quantity"])
             self.condition = data["condition"]
-            self.restock_level = data["restock_level"]
+            self.restock_level = int(data["restock_level"])
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
@@ -149,3 +149,17 @@ class Inventory(db.Model):
         """Returns all Inventory with the given condition"""
         logger.info("Processing condition query for %s ...", condition)
         return cls.query.filter(cls.condition == condition)
+
+    @classmethod
+    def find_by_category(cls, category):
+        """Returns all Inventory with the given category
+
+        Note: This is a placeholder method since category is not currently
+        implemented in the model. Returns an empty list.
+
+        Args:
+            category (string): the category of the Inventory you want to match
+        """
+        logger.info("Processing category query for %s ...", category)
+        # Since category is not implemented, return an empty list
+        return []

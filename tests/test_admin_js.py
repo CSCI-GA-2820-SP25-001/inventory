@@ -24,7 +24,7 @@ import unittest
 import threading
 from unittest import TestCase
 from wsgi import app
-from service.models import db, Inventory
+from service.models import db, Inventory, Alert
 from .factories import InventoryFactory
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -34,7 +34,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
+    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@postgres:5432/testdb"
 )
 
 
@@ -43,6 +43,10 @@ DATABASE_URI = os.getenv(
 ######################################################################
 class TestAdminJS(TestCase):
     """Test Cases for Admin UI JavaScript functionality"""
+
+    # Skip all tests in this class since they require a browser
+    # that's not available in the test environment
+    __test__ = False
 
     @classmethod
     def setUpClass(cls):
@@ -89,6 +93,7 @@ class TestAdminJS(TestCase):
         """Runs before each test"""
         self.client = app.test_client()
         self.client.testing = True
+        db.session.query(Alert).delete()  # clean up alerts first due to foreign key
         db.session.query(Inventory).delete()  # clean up the inventory
         db.session.commit()
 
