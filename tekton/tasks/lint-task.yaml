@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: lint
+spec:
+  description: >-
+    This task runs linting on the source code
+  params:
+    - name: source-repo
+      description: The git repository that contains the source code
+      type: string
+  workspaces:
+    - name: source
+      description: The workspace containing the source code
+  steps:
+    - name: run-linting
+      image: python:3.9-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        set -e
+        echo "Installing linting dependencies..."
+        pip install --no-cache-dir flake8 pylint
+        
+        echo "Running flake8..."
+        flake8 service/ tests/ features/ || { echo "Flake8 checks failed"; exit 1; }
+        
+        echo "Running pylint..."
+        pylint service/ tests/ features/ || { echo "Pylint checks failed"; exit 1; }
+        
+        echo "All linting checks passed successfully!"

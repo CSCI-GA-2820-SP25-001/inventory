@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-image
+spec:
+  description: >-
+    This task builds a Docker image and pushes it to a registry
+  params:
+    - name: source-repo
+      description: The git repository that contains the source code
+      type: string
+    - name: image-name
+      description: The name of the image to build
+      type: string
+    - name: image-tag
+      description: The tag to apply to the built image
+      type: string
+      default: "latest"
+  workspaces:
+    - name: source
+      description: The workspace containing the source code
+  steps:
+    - name: build-and-push
+      image: gcr.io/kaniko-project/executor:v1.8.0
+      env:
+        - name: DOCKER_CONFIG
+          value: /tekton/home/.docker
+      args:
+        - --dockerfile=$(workspaces.source.path)/Dockerfile
+        - --context=$(workspaces.source.path)
+        - --destination=$(params.image-name):$(params.image-tag)
+        - --skip-tls-verify
+        - --cache=true
+        - --cache-ttl=24h
+        - --compressed-caching=false
+        - --cleanup

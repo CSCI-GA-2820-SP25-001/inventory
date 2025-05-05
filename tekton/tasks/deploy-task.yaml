@@ -1,0 +1,106 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy
+spec:
+  description: >-
+    This task deploys the application to Kubernetes
+  params:
+    - name: image-name
+      description: The name of the image to deploy
+      type: string
+    - name: image-tag
+      description: The tag of the image to deploy
+      type: string
+      default: "latest"
+    - name: namespace
+      description: The namespace to deploy to
+      type: string
+      default: "default"
+    - name: app-name
+      description: The name of the application
+      type: string
+      default: "microservice"
+  steps:
+    - name: deploy-to-cluster
+      image: bitnami/kubectl:latest
+      script: |
+        set -e
+        
+        echo "Creating namespace if it doesn't exist..."
+        kubectl create namespace $(params.namespace) --dry-run=client -o yaml | kubectl apply -f -
+        
+        echo "Deploying application to Kubernetes..."
+        # Create or update the deployment
+        cat <<EOF | kubectl apply -f -
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: $(params.app-name)
+          namespace: $(params.namespace)
+          labels:
+            app: $(params.app-name)
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: $(params.app-name)
+          template:
+            metadata:
+              labels:
+                app: $(params.app-name)
+            spec:
+              containers:
+              - name: $(params.app-name)
+                image: $(params.image-name):$(params.image-tag)
+                ports:
+                - containerPort: 8080
+                env:
+                - name: PORT
+                  value: "8080"
+                resources:
+                  requests:
+                    memory: "128Mi"
+                    cpu: "100m"
+                  limits:
+                    memory: "256Mi"
+                    cpu: "200m"
+                readinessProbe:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                livenessProbe:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+        EOF
+        
+        echo "Creating service..."
+        # Create or update the service
+        cat <<EOF | kubectl apply -f -
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: $(params.app-name)
+          namespace: $(params.namespace)
+          labels:
+            app: $(params.app-name)
+        spec:
+          selector:
+            app: $(params.app-name)
+          ports:
+          - port: 80
+            targetPort: 8080
+            name: http
+          type: ClusterIP
+        EOF
+        
+        echo "Waiting for deployment to be ready..."
+        # Wait for deployment to be ready
+        kubectl rollout status deployment/$(params.app-name) -n $(params.namespace) --timeout=180s
+        
+        echo "Deployment completed successfully!"

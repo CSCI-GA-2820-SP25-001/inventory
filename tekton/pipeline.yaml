@@ -1,0 +1,128 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: microservice-pipeline
+spec:
+  description: >-
+    This pipeline builds, tests, and deploys a microservice to Kubernetes
+  params:
+    - name: git-url
+      type: string
+      description: URL of the git repository
+    - name: git-revision
+      type: string
+      description: Git revision to checkout (branch, tag, sha, ref…)
+      default: "main"
+    - name: image-name
+      type: string
+      description: Name of the image to build
+    - name: image-tag
+      type: string
+      description: Tag to apply to the built image
+      default: "latest"
+    - name: namespace
+      type: string
+      description: Namespace to deploy to
+      default: "default"
+    - name: app-name
+      type: string
+      description: Name of the application
+      default: "microservice"
+    - name: app-url
+      type: string
+      description: URL of the deployed application
+  workspaces:
+    - name: shared-workspace
+      description: Workspace containing the cloned git repo
+  tasks:
+    - name: fetch-source
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: depth
+          value: "1"
+        - name: subdirectory
+          value: ""
+        - name: deleteExisting
+          value: "true"
+    
+    - name: lint
+      taskRef:
+        name: lint
+      runAfter:
+        - fetch-source
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: source-repo
+          value: $(params.git-url)
+    
+    - name: test
+      taskRef:
+        name: test
+      runAfter:
+        - lint
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: source-repo
+          value: $(params.git-url)
+    
+    - name: build-image
+      taskRef:
+        name: build-image
+      runAfter:
+        - test
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: source-repo
+          value: $(params.git-url)
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-tag
+          value: $(params.image-tag)
+    
+    - name: deploy
+      taskRef:
+        name: deploy
+      runAfter:
+        - build-image
+      params:
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: namespace
+          value: $(params.namespace)
+        - name: app-name
+          value: $(params.app-name)
+    
+    - name: bdd-test
+      taskRef:
+        name: bdd-test
+      runAfter:
+        - deploy
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: source-repo
+          value: $(params.git-url)
+        - name: app-url
+          value: $(params.app-url)
+        - name: namespace
+          value: $(params.namespace)
+        - name: app-name
+          value: $(params.app-name)

@@ -1,0 +1,47 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: bdd-test
+spec:
+  description: >-
+    This task runs BDD tests against the deployed application
+  params:
+    - name: source-repo
+      description: The git repository that contains the source code
+      type: string
+    - name: app-url
+      description: The URL of the deployed application
+      type: string
+    - name: namespace
+      description: The namespace where the app is deployed
+      type: string
+      default: "default"
+    - name: app-name
+      description: The name of the application
+      type: string
+      default: "microservice"
+  workspaces:
+    - name: source
+      description: The workspace containing the source code
+  steps:
+    - name: run-bdd-tests
+      image: python:3.9-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        set -e
+        
+        echo "Installing BDD test dependencies..."
+        pip install --no-cache-dir behave selenium webdriver-manager requests
+        
+        # Set up environment for BDD tests
+        export APP_URL=$(params.app-url)
+        export BROWSER=chrome
+        export HEADLESS=true
+        
+        echo "Running BDD tests against $(params.app-url)..."
+        python run_bdd_tests.py --verbose --tags=smoke
+        
+        echo "Running full BDD test suite..."
+        python run_bdd_tests.py --verbose
+        
+        echo "BDD tests completed successfully!"

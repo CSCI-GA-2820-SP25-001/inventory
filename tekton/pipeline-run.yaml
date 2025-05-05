@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: microservice-pipeline-run
+  labels:
+    app: microservice
+    type: ci-cd-pipeline
+spec:
+  serviceAccountName: tekton-pipeline-sa
+  pipelineRef:
+    name: microservice-pipeline
+  params:
+    - name: git-url
+      value: "https://github.com/example/microservice.git"
+    - name: git-revision
+      value: "main"
+    - name: image-name
+      value: "registry.example.com/microservice"
+    - name: image-tag
+      value: "v1.0.0"
+    - name: namespace
+      value: "microservice-dev"
+    - name: app-name
+      value: "microservice"
+    - name: app-url
+      value: "http://microservice.microservice-dev.svc.cluster.local"
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: microservice-workspace-pvc
+  timeout: "1h"
