@@ -277,7 +277,7 @@ def update_stock(inventory_id):
     app.logger.info("Updating quantity to %s", new_quantity)
 
     # Check for low stock
-    if new_quantity < inventory.restock_level:
+    if new_quantity < int(inventory.restock_level):
         message = (
             f"Low Stock Alert: Item '{inventory.name}' has quantity {new_quantity}, "
             f"below restock level {inventory.restock_level}"

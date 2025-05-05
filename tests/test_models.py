@@ -23,7 +23,7 @@ import os
 import logging
 from unittest import TestCase
 from wsgi import app
-from service.models import Inventory, DataValidationError, db
+from service.models import Inventory, DataValidationError, db, Alert
 from .factories import InventoryFactory
 
 DATABASE_URI = os.getenv(
@@ -54,6 +54,7 @@ class TestInventory(TestCase):
 
     def setUp(self):
         """This runs before each test"""
+        db.session.query(Alert).delete()  # clean up alerts first due to foreign key
         db.session.query(Inventory).delete()  # clean up the last tests
         db.session.commit()
 

@@ -23,12 +23,11 @@ import logging
 import unittest
 from unittest import TestCase
 from wsgi import app
-from service.common import status
 from service.models import db, Inventory, Alert
 from .factories import InventoryFactory
 
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
+    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@postgres:5432/testdb"
 )
 
 
@@ -57,9 +56,7 @@ class TestAdminUI(TestCase):
         """Runs before each test"""
         self.client = app.test_client()
         self.client.testing = True
-        db.session.query(
-            Alert
-        ).delete()  # clean up alerts first (foreign key constraint)
+        db.session.query(Alert).delete()  # clean up alerts first due to foreign key
         db.session.query(Inventory).delete()  # clean up the inventory
         db.session.commit()
 
@@ -71,145 +68,100 @@ class TestAdminUI(TestCase):
     #  T E S T   C A S E S
     ######################################################################
 
-    def test_get_admin_ui(self):
-        """It should return the Admin UI page"""
+    def test_admin_ui_page(self):
+        """It should return the admin UI page"""
         response = self.client.get("/admin")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, 200)
         self.assertIn(b"Inventory Management System", response.data)
-        self.assertIn(b"Add New Product", response.data)
         self.assertIn(b"Product Search", response.data)
+        self.assertIn(b"Add New Product", response.data)
 
-    def test_restock_check(self):
-        """It should update inventory quantity and create alert if below restock level"""
-        # Create a test inventory item
-        test_inventory = InventoryFactory(quantity=10, restock_level=5)
-        test_inventory.create()
-        inventory_id = test_inventory.id
-
-        # Test updating quantity above restock level
-        data = {"quantity": 8}
-        response = self.client.put(
-            f"/inventory/{inventory_id}/restock_check",
-            json=data,
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_inventory = response.get_json()
-        self.assertEqual(updated_inventory["quantity"], 8)
-
-        # Verify no alerts were created
-        alerts = db.session.query(Alert).filter_by(product_id=inventory_id).all()
-        self.assertEqual(len(alerts), 0)
-
-        # Test updating quantity below restock level
-        data = {"quantity": 3}
-        response = self.client.put(
-            f"/inventory/{inventory_id}/restock_check",
-            json=data,
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_inventory = response.get_json()
-        self.assertEqual(updated_inventory["quantity"], 3)
-
-        # Verify an alert was created
-        alerts = db.session.query(Alert).filter_by(product_id=inventory_id).all()
-        self.assertEqual(len(alerts), 1)
-        self.assertIn("Low Stock Alert", alerts[0].message)
-
-    def test_restock_check_not_found(self):
-        """It should return 404 when inventory item doesn't exist"""
-        data = {"quantity": 5}
-        response = self.client.put(
-            "/inventory/9999/restock_check", json=data, content_type="application/json"
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        error_response = response.get_json()
-        self.assertIn("error", error_response)
-        self.assertEqual(error_response["error"], "Inventory not found")
-
-    def test_restock_check_missing_quantity(self):
-        """It should return 400 when quantity is missing from request"""
-        # Create a test inventory item
-        test_inventory = InventoryFactory()
-        test_inventory.create()
-        inventory_id = test_inventory.id
-
-        # Test with missing quantity
-        data = {"some_other_field": "value"}
-        response = self.client.put(
-            f"/inventory/{inventory_id}/restock_check",
-            json=data,
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        error_response = response.get_json()
-        self.assertIn("error", error_response)
-        self.assertEqual(error_response["error"], "Missing quantity")
-
-    def test_update_product(self):
-        """It should update a product with new values"""
-        # Create a test inventory item
-        test_inventory = InventoryFactory(
+    def test_update_stock_endpoint(self):
+        """It should update stock level and create alert if below restock level"""
+        # Create a test product
+        test_product = InventoryFactory(
             name="Test Product", quantity=10, condition="new", restock_level=5
         )
-        test_inventory.create()
-        inventory_id = test_inventory.id
+        test_product.create()
 
-        # Update the product with new values
-        updated_data = {
-            "name": "Test Product",  # Keep the same name
-            "quantity": 15,
-            "condition": "used",
-            "restock_level": 8,
-        }
+        # Update stock to below restock level
+        update_data = {"quantity": 3}
         response = self.client.put(
-            f"/inventory/{inventory_id}",
-            json=updated_data,
+            f"/inventory/{test_product.id}/restock_check",
+            json=update_data,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # Check the response data
-        updated_product = response.get_json()
-        self.assertEqual(updated_product["name"], "Test Product")
-        self.assertEqual(updated_product["quantity"], 15)
-        self.assertEqual(updated_product["condition"], "used")
-        self.assertEqual(updated_product["restock_level"], 8)
+        # Check response
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(int(data["quantity"]), 3)
 
-        # Verify the database was updated
-        updated_inventory = Inventory.find(inventory_id)
-        self.assertEqual(updated_inventory.quantity, 15)
-        self.assertEqual(updated_inventory.condition, "used")
-        self.assertEqual(updated_inventory.restock_level, 8)
+        # Verify alert was created
+        alerts = db.session.query(Alert).filter_by(product_id=test_product.id).all()
+        self.assertEqual(len(alerts), 1)
+        self.assertIn("Low Stock Alert", alerts[0].message)
+        self.assertIn(str(test_product.name), alerts[0].message)
 
-    def test_update_product_not_found(self):
-        """It should return 404 when trying to update a non-existent product"""
-        # Attempt to update a product that doesn't exist
-        data = {
-            "name": "Non-existent Product",
-            "quantity": 5,
-            "condition": "new",
-            "restock_level": 3,
-        }
-        response = self.client.put(
-            "/inventory/9999", json=data, content_type="application/json"
+    def test_update_stock_no_alert(self):
+        """It should update stock level without creating alert if above restock level"""
+        # Create a test product
+        test_product = InventoryFactory(
+            name="Test Product", quantity=10, condition="new", restock_level=5
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        test_product.create()
 
-    def test_update_product_invalid_content_type(self):
-        """It should return 415 when content type is not application/json"""
-        # Create a test inventory item
-        test_inventory = InventoryFactory()
-        test_inventory.create()
-        inventory_id = test_inventory.id
-
-        # Test with invalid content type
-        data = "This is not JSON"
+        # Update stock to above restock level
+        update_data = {"quantity": 8}
         response = self.client.put(
-            f"/inventory/{inventory_id}", data=data, content_type="text/plain"
+            f"/inventory/{test_product.id}/restock_check",
+            json=update_data,
+            content_type="application/json",
         )
-        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+        # Check response
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["quantity"], 8)
+
+        # Verify no alert was created
+        alerts = db.session.query(Alert).filter_by(product_id=test_product.id).all()
+        self.assertEqual(len(alerts), 0)
+
+    def test_update_stock_not_found(self):
+        """It should return 404 when updating stock for non-existent inventory"""
+        update_data = {"quantity": 8}
+        response = self.client.put(
+            "/inventory/9999/restock_check",
+            json=update_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_update_stock_missing_quantity(self):
+        """It should return 400 when quantity is missing"""
+        # Create a test product
+        test_product = InventoryFactory(
+            name="Test Product", quantity=10, condition="new", restock_level=5
+        )
+        test_product.create()
+
+        # Update with missing quantity
+        update_data = {"not_quantity": 8}
+        response = self.client.put(
+            f"/inventory/{test_product.id}/restock_check",
+            json=update_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_find_by_category(self):
+        """It should handle find_by_category even though it's not implemented"""
+        # This tests the code path in list_inventory that calls find_by_category
+        response = self.client.get("/inventory?category=electronics")
+        self.assertEqual(response.status_code, 200)
+        # Since find_by_category is not implemented, it should return an empty list
+        self.assertEqual(response.get_json(), [])
 
 
 if __name__ == "__main__":

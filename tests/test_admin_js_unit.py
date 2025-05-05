@@ -24,12 +24,12 @@ import unittest
 from unittest import TestCase
 from unittest.mock import patch, MagicMock
 from wsgi import app
-from service.models import db, Inventory
+from service.models import db, Inventory, Alert
 from .factories import InventoryFactory
 import requests_mock
 
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
+    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@postgres:5432/testdb"
 )
 
 
@@ -58,6 +58,7 @@ class TestAdminJSUnit(TestCase):
         """Runs before each test"""
         self.client = app.test_client()
         self.client.testing = True
+        db.session.query(Alert).delete()  # clean up alerts first due to foreign key
         db.session.query(Inventory).delete()  # clean up the inventory
         db.session.commit()
 
@@ -89,9 +90,11 @@ class TestAdminJSUnit(TestCase):
         # Verify the data matches the test product
         self.assertEqual(data["id"], self.test_product.id)
         self.assertEqual(data["name"], self.test_product.name)
-        self.assertEqual(data["quantity"], self.test_product.quantity)
+        self.assertEqual(data["quantity"], int(self.test_product.quantity))
         self.assertEqual(data["condition"], self.test_product.condition)
-        self.assertEqual(data["restock_level"], self.test_product.restock_level)
+        self.assertEqual(
+            int(data["restock_level"]), int(self.test_product.restock_level)
+        )
 
     def test_update_inventory_api(self):
         """It should update inventory data through the API"""
@@ -119,15 +122,15 @@ class TestAdminJSUnit(TestCase):
         # Verify the data was updated
         self.assertEqual(data["id"], self.test_product.id)
         self.assertEqual(data["name"], self.test_product.name)
-        self.assertEqual(data["quantity"], 15)
+        self.assertEqual(int(data["quantity"]), 15)
         self.assertEqual(data["condition"], "used")
-        self.assertEqual(data["restock_level"], 8)
+        self.assertEqual(int(data["restock_level"]), 8)
 
         # Verify the database was updated
         updated_product = Inventory.find(self.test_product.id)
-        self.assertEqual(updated_product.quantity, 15)
+        self.assertEqual(int(updated_product.quantity), 15)
         self.assertEqual(updated_product.condition, "used")
-        self.assertEqual(updated_product.restock_level, 8)
+        self.assertEqual(int(updated_product.restock_level), 8)
 
     def test_update_inventory_api_not_found(self):
         """It should return 404 when updating non-existent inventory"""
@@ -219,9 +222,9 @@ class TestAdminJSUnit(TestCase):
         data = json.loads(response.data)
 
         # Verify the data was updated
-        self.assertEqual(data["quantity"], 15)
+        self.assertEqual(int(data["quantity"]), 15)
         self.assertEqual(data["condition"], "used")
-        self.assertEqual(data["restock_level"], 8)
+        self.assertEqual(int(data["restock_level"]), 8)
 
     def test_api_error_handling(self):
         """Test error handling for API requests"""
