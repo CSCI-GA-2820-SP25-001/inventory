@@ -69,7 +69,20 @@
                     </tbody>
                 </table>
             </section>
-            
+            <section class="filter-section">
+                <h2>Filter by Condition</h2>
+                <div class="form-group">
+                  <label for="condition-filter">Condition:</label>
+                  <select id="condition-filter" name="condition-filter">
+                    <option value="">All</option>
+                    <option value="new">New</option>
+                    <option value="used">Used</option>
+                    <option value="damaged">Damaged</option>
+                  </select>
+                  <button id="filter-btn" class="btn">Filter</button>
+                </div>
+              </section>
+              
             <section class="results-section">
                 <h2>Product Details</h2>
                 <div id="product-details" class="hidden">
@@ -83,6 +96,8 @@
                         </div>
                         <div id="stock-status" class="stock-status"></div>
                         <button id="edit-product-btn" class="btn">Edit Product</button>
+                        <button id="mark-damaged-btn" class="btn btn-warning">Mark as Damaged</button>
+
                     </div>
                 </div>
                 <div id="error-message" class="error hidden"></div>
