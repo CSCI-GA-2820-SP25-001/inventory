@@ -1,0 +1,95 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ci-cd-pipeline
+spec:
+  description: |
+    This pipeline runs the CI/CD process for the microservice
+  params:
+    - name: image-name
+      description: The name of the image to build and deploy
+      type: string
+      default: "petshop"
+    - name: image-tag
+      description: The tag of the image to build and deploy
+      type: string
+      default: "1.0"
+    - name: registry
+      description: The registry to push the image to
+      type: string
+      default: "cluster-registry:5000"
+    - name: namespace
+      description: The namespace to deploy to
+      type: string
+      default: "default"
+    - name: app-url
+      description: The URL of the deployed application
+      type: string
+      default: "http://petshop.default.svc.cluster.local"
+  workspaces:
+    - name: shared-workspace
+      description: The workspace containing the source code
+  tasks:
+    - name: lint
+      taskRef:
+        name: lint
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    
+    - name: test
+      runAfter:
+        - lint
+      taskRef:
+        name: test
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    
+    - name: build-docker-image
+      runAfter:
+        - test
+      taskRef:
+        name: build-docker-image
+      params:
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: registry
+          value: $(params.registry)
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    
+    - name: deploy-to-kubernetes
+      runAfter:
+        - build-docker-image
+      taskRef:
+        name: deploy-to-kubernetes
+      params:
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: registry
+          value: $(params.registry)
+        - name: namespace
+          value: $(params.namespace)
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    
+    - name: bdd-tests
+      runAfter:
+        - deploy-to-kubernetes
+      taskRef:
+        name: bdd-tests
+      params:
+        - name: app-url
+          value: $(params.app-url)
+        - name: namespace
+          value: $(params.namespace)
+      workspaces:
+        - name: source
+          workspace: shared-workspace

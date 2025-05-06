@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-docker-image
+spec:
+  description: |
+    This task builds a Docker image and pushes it to a registry
+  params:
+    - name: image-name
+      description: The name of the image to build
+      type: string
+      default: "petshop"
+    - name: image-tag
+      description: The tag of the image to build
+      type: string
+      default: "1.0"
+    - name: registry
+      description: The registry to push the image to
+      type: string
+      default: "cluster-registry:5000"
+  workspaces:
+    - name: source
+      description: The workspace containing the source code
+  steps:
+    - name: build-and-push
+      image: gcr.io/kaniko-project/executor:v1.8.0-debug
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: DOCKER_CONFIG
+          value: /tekton/home/.docker
+      command:
+        - /kaniko/executor
+      args:
+        - --dockerfile=Dockerfile
+        - --context=$(workspaces.source.path)
+        - --destination=$(params.registry)/$(params.image-name):$(params.image-tag)
+        - --skip-tls-verify

@@ -1,0 +1,22 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: ci-cd-pipeline-run
+spec:
+  pipelineRef:
+    name: ci-cd-pipeline
+  params:
+    - name: image-name
+      value: "petshop"
+    - name: image-tag
+      value: "1.0"
+    - name: registry
+      value: "cluster-registry:5000"
+    - name: namespace
+      value: "default"
+    - name: app-url
+      value: "http://petshop.default.svc.cluster.local"
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: ci-cd-workspace-pvc

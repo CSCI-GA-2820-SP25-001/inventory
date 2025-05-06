@@ -1,13 +1,26 @@
-FROM python:3.11-slim
+FROM python:3.9-slim
 
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080
+
+# Set the working directory
 WORKDIR /app
 
-COPY requirements.txt ./
-COPY service ./service
-COPY wsgi.py .
+# Copy requirements files
+COPY Pipfile Pipfile.lock ./
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies
+RUN pip install --no-cache-dir --upgrade pip pipenv && \
+    pipenv install --system --deploy && \
+    pip install gunicorn
 
-EXPOSE 5000
+# Copy the application code
+COPY . .
 
-CMD ["python", "wsgi.py"]
+# Expose the port
+EXPOSE $PORT
+
+# Run the application
+CMD gunicorn --bind=0.0.0.0:$PORT --access-logfile=- wsgi:app
