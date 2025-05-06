@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: inventory-cd-pipeline
+spec:
+  workspaces:
+    - name: shared-workspace
+  tasks:
+    - name: clone
+      taskRef:
+        name: clone-repo
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+
+    - name: test
+      runAfter: [clone]
+      taskRef:
+        name: run-tests
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+
+    - name: deploy
+      runAfter: [test]
+      taskRef:
+        name: deploy-to-k8s
+      workspaces:
+        - name: output
+          workspace: shared-workspace

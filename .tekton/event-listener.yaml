@@ -1,0 +1,12 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: el-inventory
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - name: inventory-trigger
+      bindings:
+        - ref: inventory-trigger-binding
+      template:
+        ref: inventory-trigger-template
