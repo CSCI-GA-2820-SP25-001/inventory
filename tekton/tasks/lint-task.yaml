@@ -1,0 +1,20 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: lint
+spec:
+  description: |
+    This task runs linting on the source code
+  workspaces:
+    - name: source
+      description: The workspace containing the source code
+  steps:
+    - name: lint
+      image: python:3.9
+      workingDir: $(workspaces.source.path)
+      script: |
+        pip install flake8 pylint pipenv
+        pipenv install --system --dev
+        flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
+        pylint service tests --max-line-length=127

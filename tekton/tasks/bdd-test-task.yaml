@@ -1,0 +1,83 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: bdd-tests
+spec:
+  description: |
+    This task runs BDD tests against the deployed application
+  params:
+    - name: app-url
+      description: The URL of the deployed application
+      type: string
+      default: "http://petshop.default.svc.cluster.local"
+    - name: namespace
+      description: The namespace where the application is deployed
+      type: string
+      default: "default"
+  workspaces:
+    - name: source
+      description: The workspace containing the source code and BDD tests
+  steps:
+    - name: wait-for-deployment
+      image: bitnami/kubectl:latest
+      script: |
+        # Wait for the deployment to be ready
+        kubectl wait --for=condition=available --timeout=300s deployment/petshop -n $(params.namespace)
+    
+    - name: run-bdd-tests
+      image: python:3.9-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        # Install dependencies for BDD tests
+        pip install behave selenium pytest requests pipenv
+        pipenv install --system --dev
+        
+        # Set the application URL for tests
+        export APP_URL=$(params.app-url)
+        
+        # Run BDD tests
+        if [ -d "features" ]; then
+          behave features/
+        elif [ -d "bdd" ]; then
+          behave bdd/
+        else
+          echo "No BDD test directory found. Creating a sample BDD test."
+          mkdir -p features/steps
+          
+          cat > features/petshop.feature << EOF
+        Feature: Pet Shop API
+          As a user of the Pet Shop API
+          I want to be able to manage pets
+          So that I can keep track of pets in the shop
+
+          Scenario: Health check
+            When I check the health endpoint
+            Then I should get a 200 OK response
+        EOF
+          
+          cat > features/steps/petshop_steps.py << EOF
+        from behave import when, then
+        import requests
+
+        @when('I check the health endpoint')
+        def step_impl(context):
+            context.response = requests.get(f"{context.config.userdata.get('app_url', 'http://localhost:8080')}/health")
+
+        @then('I should get a 200 OK response')
+        def step_impl(context):
+            assert context.response.status_code == 200
+        EOF
+          
+          cat > features/environment.py << EOF
+        import os
+
+        def before_all(context):
+            context.config.setup_logging()
+            # Get the application URL from environment variable
+            app_url = os.environ.get('APP_URL', 'http://localhost:8080')
+            context.config.userdata['app_url'] = app_url
+        EOF
+          
+          # Run the sample BDD test
+          behave features/ -v
+        fi

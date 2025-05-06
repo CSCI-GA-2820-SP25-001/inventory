@@ -25,13 +25,13 @@ import unittest
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import db, Inventory
+from service.models import db, Inventory, Alert
 from .factories import InventoryFactory
 import pytest
 
 
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
+    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@postgres:5432/testdb"
 )
 BASE_URL = "/inventory"
 
@@ -74,6 +74,7 @@ class TestYourResourceService(TestCase):
         """Runs before each test"""
         self.client = app.test_client()
         self.client.testing = True
+        db.session.query(Alert).delete()  # clean up alerts first due to foreign key
         db.session.query(Inventory).delete()  # clean up the last tests
         db.session.commit()
 
@@ -134,7 +135,7 @@ class TestYourResourceService(TestCase):
         logging.debug("New Inventory: %s", new_inventory)
         self.assertIsNotNone(new_inventory["id"])
         self.assertEqual(new_inventory["name"], test_inventory.name)
-        self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
+        self.assertEqual(int(new_inventory["quantity"]), test_inventory.quantity)
         # self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
         self.assertEqual(new_inventory["condition"], test_inventory.condition)
         self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)

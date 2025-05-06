@@ -11,8 +11,9 @@
         <header>
             <h1>Inventory Management System</h1>
         </header>
-        
+
         <main>
+            <!-- Search Section -->
             <section class="search-section">
                 <h2>Product Search</h2>
                 <div class="search-form">
@@ -23,7 +24,8 @@
                     <button id="search-btn" class="btn">Search</button>
                 </div>
             </section>
-            
+
+            <!-- Add Product Section -->
             <section class="add-product-section">
                 <h2>Add New Product</h2>
                 <div class="add-product-form">
@@ -52,6 +54,8 @@
                 </div>
                 <div id="add-product-message" class="message hidden"></div>
             </section>
+
+            <!-- View All Products -->
             <section class="list-products-section">
                 <h2>View All Products</h2>
                 <button id="view-products-btn" class="btn">View All Products</button>
@@ -65,24 +69,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Rows will be inserted here via JavaScript -->
+                        <!-- Rows populated by JavaScript -->
                     </tbody>
                 </table>
             </section>
+
+            <!-- Filter by Condition -->
             <section class="filter-section">
                 <h2>Filter by Condition</h2>
                 <div class="form-group">
-                  <label for="condition-filter">Condition:</label>
-                  <select id="condition-filter" name="condition-filter">
-                    <option value="">All</option>
-                    <option value="new">New</option>
-                    <option value="used">Used</option>
-                    <option value="damaged">Damaged</option>
-                  </select>
-                  <button id="filter-btn" class="btn">Filter</button>
+                    <label for="condition-filter">Condition:</label>
+                    <select id="condition-filter" name="condition-filter">
+                        <option value="">All</option>
+                        <option value="new">New</option>
+                        <option value="used">Used</option>
+                        <option value="damaged">Damaged</option>
+                    </select>
+                    <button id="filter-btn" class="btn">Filter</button>
                 </div>
-              </section>
-              
+            </section>
+
+            <!-- Product Details -->
             <section class="results-section">
                 <h2>Product Details</h2>
                 <div id="product-details" class="hidden">
@@ -97,12 +104,12 @@
                         <div id="stock-status" class="stock-status"></div>
                         <button id="edit-product-btn" class="btn">Edit Product</button>
                         <button id="mark-damaged-btn" class="btn btn-warning">Mark as Damaged</button>
-
                     </div>
                 </div>
                 <div id="error-message" class="error hidden"></div>
             </section>
-            
+
+            <!-- Update Product -->
             <section id="update-product-section" class="update-product-section hidden">
                 <h2>Update Product</h2>
                 <div class="update-product-form">
@@ -131,12 +138,12 @@
                 <div id="update-product-message" class="message hidden"></div>
             </section>
         </main>
-        
+
         <footer>
             <p>&copy; 2025 Inventory Management System</p>
         </footer>
     </div>
-    
+
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 </html>
