@@ -1,0 +1,12 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: clone-repo
+spec:
+  workspaces:
+    - name: output
+  steps:
+    - name: clone
+      image: alpine/git
+      script: |
+        git clone https://github.com/CSCI-GA-2820-SP25-001/inventory.git /workspace/output
