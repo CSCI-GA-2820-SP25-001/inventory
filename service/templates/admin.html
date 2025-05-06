@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Admin UI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Inventory Management System</h1>
+        </header>
+        
+        <main>
+            <section class="search-section">
+                <h2>Product Search</h2>
+                <div class="search-form">
+                    <div class="form-group">
+                        <label for="product-id">Product ID:</label>
+                        <input type="number" id="product-id" name="product-id" min="1" placeholder="Enter product ID">
+                    </div>
+                    <button id="search-btn" class="btn">Search</button>
+                </div>
+            </section>
+            
+            <section class="add-product-section">
+                <h2>Add New Product</h2>
+                <div class="add-product-form">
+                    <div class="form-group">
+                        <label for="new-product-name">Product Name:</label>
+                        <input type="text" id="new-product-name" name="new-product-name" placeholder="Enter product name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-product-quantity">Quantity:</label>
+                        <input type="number" id="new-product-quantity" name="new-product-quantity" min="0" placeholder="Enter quantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-product-condition">Condition:</label>
+                        <select id="new-product-condition" name="new-product-condition" required>
+                            <option value="">Select condition</option>
+                            <option value="new">New</option>
+                            <option value="used">Used</option>
+                            <option value="damaged">Damaged</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-product-restock-level">Restock Level:</label>
+                        <input type="number" id="new-product-restock-level" name="new-product-restock-level" min="0" placeholder="Enter restock level" required>
+                    </div>
+                    <button id="add-product-btn" class="btn">Add Product</button>
+                </div>
+                <div id="add-product-message" class="message hidden"></div>
+            </section>
+            
+            <section class="results-section">
+                <h2>Product Details</h2>
+                <div id="product-details" class="hidden">
+                    <div class="product-card">
+                        <h3 id="product-name">Product Name</h3>
+                        <div class="product-info">
+                            <p><strong>ID:</strong> <span id="product-id-display"></span></p>
+                            <p><strong>Quantity:</strong> <span id="product-quantity"></span></p>
+                            <p><strong>Condition:</strong> <span id="product-condition"></span></p>
+                            <p><strong>Restock Level:</strong> <span id="product-restock-level"></span></p>
+                        </div>
+                        <div id="stock-status" class="stock-status"></div>
+                        <button id="edit-product-btn" class="btn">Edit Product</button>
+                    </div>
+                </div>
+                <div id="error-message" class="error hidden"></div>
+            </section>
+            
+            <section id="update-product-section" class="update-product-section hidden">
+                <h2>Update Product</h2>
+                <div class="update-product-form">
+                    <div class="form-group">
+                        <label for="update-product-quantity">Quantity:</label>
+                        <input type="number" id="update-product-quantity" name="update-product-quantity" min="0" placeholder="Enter quantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="update-product-condition">Condition:</label>
+                        <select id="update-product-condition" name="update-product-condition" required>
+                            <option value="">Select condition</option>
+                            <option value="new">New</option>
+                            <option value="used">Used</option>
+                            <option value="damaged">Damaged</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="update-product-restock-level">Restock Level:</label>
+                        <input type="number" id="update-product-restock-level" name="update-product-restock-level" min="0" placeholder="Enter restock level" required>
+                    </div>
+                    <div class="form-buttons">
+                        <button id="update-product-btn" class="btn">Update Product</button>
+                        <button id="cancel-update-btn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+                <div id="update-product-message" class="message hidden"></div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Inventory Management System</p>
+        </footer>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>
