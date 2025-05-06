@@ -248,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ===== MARK AS DAMAGED =====
     const markDamagedBtn = document.getElementById("mark-damaged-btn");
+    const deleteProductBtn = document.getElementById("delete-product-btn");
 
     markDamagedBtn?.addEventListener("click", async () => {
         const productId = productIdDisplay.textContent;
@@ -263,5 +264,41 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Error marking product as damaged: " + err.message);
         }
     });
-});
 
+    // ===== DELETE PRODUCT =====
+    deleteProductBtn?.addEventListener("click", async () => {
+        const productId = productIdDisplay.textContent;
+        if (!productId) {
+            showError('No product selected');
+            return;
+        }
+
+        // Confirm deletion with the user
+        if (!confirm(`Are you sure you want to delete product "${productName.textContent}" (ID: ${productId})?`)) {
+            return; // User cancelled the deletion
+        }
+
+        try {
+            const response = await fetch(`/inventory/${productId}`, {
+                method: "DELETE"
+            });
+            
+            if (!response.ok) throw new Error("Failed to delete product");
+            
+            // Hide the product details and show a success message
+            productDetails.classList.add('hidden');
+            showError(`Product "${productName.textContent}" (ID: ${productId}) has been deleted.`);
+            errorMessage.className = 'message success';
+            
+            // Clear the search input
+            productIdInput.value = '';
+            
+            // If the products table is visible, refresh it
+            if (!table.classList.contains('hidden')) {
+                fetchAndRenderInventory("/inventory");
+            }
+        } catch (err) {
+            alert("Error deleting product: " + err.message);
+        }
+    });
+});
