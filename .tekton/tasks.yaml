@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: clone-repo
+spec:
+  steps:
+    - name: clone
+      image: alpine/git
+      script: |
+        git clone https://github.com/CSCI-GA-2820-SP25-001/inventory.git /workspace/output
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-tests
+spec:
+  steps:
+    - name: test
+      image: python:3.10
+      workingDir: /workspace/output
+      script: |
+        pip install pipenv
+        pipenv install --dev
+        pipenv run pytest
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy-to-k8s
+spec:
+  steps:
+    - name: deploy
+      image: bitnami/kubectl:latest
+      workingDir: /workspace/output
+      script: |
+        kubectl apply -f k8s
